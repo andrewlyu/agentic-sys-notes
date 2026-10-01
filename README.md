@@ -4,4 +4,4 @@ Public architecture notes on building, reviewing, and operating agentic systems.
 
 ## Notes
 
-- [Logging Is Part of the Agentic System Architecture](notes/logging-architecture-for-agentic-systems/index.html)
+- [Agentic Systems Need an Evidence Architecture](notes/evidence-architecture-for-agentic-systems/index.html)
