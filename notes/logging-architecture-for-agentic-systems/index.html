@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Why logging is the accountability architecture of an agentic system.">
+  <title>Logging Is Part of the Agentic System Architecture</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --paper: #f5f5f5;
+      --paper-2: #ececec;
+      --ink: #2d3142;
+      --muted: #4f5d75;
+      --soft: #7a8399;
+      --rule: rgba(45, 49, 66, 0.12);
+      --accent: #eb6c36;
+      --accent-tint: rgba(235, 108, 54, 0.08);
+      --sans: 'Geist', system-ui, sans-serif;
+      --serif: 'Instrument Serif', Georgia, serif;
+      --mono: 'Geist Mono', ui-monospace, monospace;
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 3.5rem 2rem;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+    }
+
+    main { width: min(100%, 1280px); margin: 0 auto; }
+
+    .masthead {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
+      gap: 3rem;
+      align-items: end;
+      margin-bottom: 2.5rem;
+    }
+
+    .eyebrow {
+      margin-bottom: 0.75rem;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 15ch;
+      font-family: var(--serif);
+      font-size: clamp(3rem, 7vw, 6.75rem);
+      font-weight: 400;
+      letter-spacing: -0.045em;
+      line-height: 0.91;
+    }
+
+    .dek {
+      max-width: 37ch;
+      padding-bottom: 0.45rem;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.4vw, 1.2rem);
+      line-height: 1.55;
+    }
+
+    .dek strong { color: var(--ink); font-weight: 600; }
+
+    .diagram-frame {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      background: var(--paper-2);
+      padding: 1.5rem;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      min-width: 1280px;
+    }
+
+    @media print {
+      .diagram-frame { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 0.85fr;
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+
+    .card {
+      min-height: 11rem;
+      padding: 1.35rem;
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      background: #ffffff;
+    }
+
+    .card-label {
+      margin-bottom: 1rem;
+      color: var(--soft);
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .card h2 {
+      margin-bottom: 0.8rem;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.62;
+    }
+
+    .card.is-focal { border-top: 3px solid var(--accent); }
+
+    .thesis {
+      display: grid;
+      grid-template-columns: 0.7fr 1.3fr;
+      gap: 2rem;
+      align-items: start;
+      margin-top: 4rem;
+      padding: 2.5rem 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .thesis blockquote {
+      max-width: 27ch;
+      font-family: var(--serif);
+      font-size: clamp(1.8rem, 3vw, 3rem);
+      font-style: italic;
+      line-height: 1.12;
+    }
+
+    .proof {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-top: 2.5rem;
+    }
+
+    .proof h2 {
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .proof p {
+      max-width: 56ch;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 3rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--rule);
+      color: var(--soft);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.05em;
+    }
+
+    footer a { color: var(--muted); text-underline-offset: 0.2em; }
+
+    @media (max-width: 860px) {
+      body { padding: 2rem 1rem; }
+      .masthead, .thesis, .proof { grid-template-columns: 1fr; gap: 1.5rem; }
+      .cards { grid-template-columns: 1fr; }
+      .card { min-height: 0; }
+      h1 { max-width: 12ch; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">Day One · Architecture Note</p>
+        <h1>Logging is part of the agentic system architecture.</h1>
+      </div>
+      <p class="dek"><strong>The goal is not more events.</strong> It is enough institutional memory to explain what acted, under whose authority, on which evidence, and with what level of assurance.</p>
+    </header>
+
+    <section aria-label="Accountability architecture diagram">
+      <div class="diagram-frame">
+        <svg viewBox="0 0 1280 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="agentic-logging-title agentic-logging-desc">
+          <title id="agentic-logging-title">Logging as agentic-system accountability architecture</title>
+          <desc id="agentic-logging-desc">An agentic chain moves from intent through execution, tools, outputs, and evaluation. Every stage contributes evidence to a shared observability record that informs review and controlled evolution.</desc>
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
+            </marker>
+            <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/>
+            </marker>
+            <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/>
+            </marker>
+          </defs>
+
+          <rect width="1280" height="600" fill="#f5f5f5"/>
+
+          <text x="40" y="72" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.16em">AGENTIC CHAIN</text>
+          <text x="40" y="336" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.16em">EVERY STAGE EMITS TO THE SHARED RECORD</text>
+
+          <!-- Agentic-chain connectors, drawn before nodes. -->
+          <line x1="200" y1="168" x2="240" y2="168" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+          <line x1="400" y1="168" x2="440" y2="168" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+          <line x1="600" y1="168" x2="640" y2="168" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+          <line x1="800" y1="168" x2="840" y2="168" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+          <line x1="1000" y1="168" x2="1080" y2="168" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+          <!-- Every stage contributes telemetry to the shared observability record. -->
+          <line x1="120" y1="216" x2="120" y2="360" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+          <line x1="320" y1="216" x2="320" y2="360" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+          <line x1="520" y1="216" x2="520" y2="360" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+          <line x1="720" y1="216" x2="720" y2="360" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+          <line x1="920" y1="216" x2="920" y2="360" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+          <!-- Controlled evolution requires the decision and its supporting evidence. -->
+          <path d="M 1000,400 H 1152 Q 1160,400 1160,392 V 216" fill="none" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+          <rect x="1040" y="380" width="72" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="1076" y="389" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">EVIDENCE</text>
+          <rect x="1004" y="146" width="72" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="1040" y="155" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">DECISION</text>
+
+          <!-- Intent and policy. -->
+          <rect x="40" y="120" width="160" height="96" rx="6" fill="#f5f5f5"/>
+          <rect x="40" y="120" width="160" height="96" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
+          <rect x="52" y="132" width="44" height="16" rx="2" fill="transparent" stroke="rgba(122,131,153,0.45)" stroke-width="0.8"/>
+          <text x="74" y="143" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">INPUT</text>
+          <text x="120" y="168" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">
+            <tspan x="120" dy="0">Intent &amp;</tspan><tspan x="120" dy="17">policy</tspan>
+          </text>
+
+          <!-- Agent execution. -->
+          <rect x="240" y="120" width="160" height="96" rx="6" fill="#f5f5f5"/>
+          <rect x="240" y="120" width="160" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+          <rect x="252" y="132" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+          <text x="274" y="143" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AGENT</text>
+          <text x="320" y="168" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">
+            <tspan x="320" dy="0">Agent</tspan><tspan x="320" dy="17">execution</tspan>
+          </text>
+
+          <!-- Tools and services. -->
+          <rect x="440" y="120" width="160" height="96" rx="6" fill="#f5f5f5"/>
+          <rect x="440" y="120" width="160" height="96" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+          <rect x="452" y="132" width="48" height="16" rx="2" fill="transparent" stroke="rgba(79,93,117,0.50)" stroke-width="0.8"/>
+          <text x="476" y="143" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ACTION</text>
+          <text x="520" y="168" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">
+            <tspan x="520" dy="0">Tools &amp;</tspan><tspan x="520" dy="17">services</tspan>
+          </text>
+
+          <!-- Artifact or action. -->
+          <rect x="640" y="120" width="160" height="96" rx="6" fill="#f5f5f5"/>
+          <rect x="640" y="120" width="160" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+          <rect x="652" y="132" width="48" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+          <text x="676" y="143" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">OUTPUT</text>
+          <text x="720" y="168" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">
+            <tspan x="720" dy="0">Artifact or</tspan><tspan x="720" dy="17">action</tspan>
+          </text>
+
+          <!-- Evaluation and decision. -->
+          <rect x="840" y="120" width="160" height="96" rx="6" fill="#f5f5f5"/>
+          <rect x="840" y="120" width="160" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+          <rect x="852" y="132" width="48" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+          <text x="876" y="143" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">REVIEW</text>
+          <text x="920" y="168" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">
+            <tspan x="920" dy="0">Evaluation &amp;</tspan><tspan x="920" dy="17">decision</tspan>
+          </text>
+
+          <!-- Shared observability record. -->
+          <rect x="40" y="360" width="960" height="80" rx="6" fill="#f5f5f5"/>
+          <rect x="40" y="360" width="960" height="80" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+          <rect x="56" y="376" width="104" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.55)" stroke-width="0.8"/>
+          <text x="108" y="387" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">OBSERVABILITY</text>
+          <text x="192" y="389" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif">Shared observability record</text>
+          <text x="520" y="420" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle" letter-spacing="0.04em">Identity · Context · Action · Evidence · Outcome</text>
+
+          <!-- Controlled evolution. -->
+          <rect x="1080" y="120" width="160" height="96" rx="6" fill="#f5f5f5"/>
+          <rect x="1080" y="120" width="160" height="96" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+          <rect x="1092" y="132" width="48" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.24)" stroke-width="0.8"/>
+          <text x="1116" y="143" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">VALUE</text>
+          <text x="1160" y="168" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">
+            <tspan x="1160" dy="0">Controlled</tspan><tspan x="1160" dy="17">evolution</tspan>
+          </text>
+
+          <!-- Legend strip. -->
+          <line x1="40" y1="500" x2="1240" y2="500" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+          <text x="40" y="520" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.16em">LEGEND</text>
+
+          <rect x="40" y="540" width="20" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+          <text x="72" y="550" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Agentic stage</text>
+
+          <rect x="240" y="540" width="20" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+          <text x="272" y="550" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Observability record</text>
+
+          <line x1="468" y1="546" x2="500" y2="546" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+          <text x="512" y="550" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Telemetry emission</text>
+
+          <line x1="732" y1="546" x2="764" y2="546" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+          <text x="776" y="550" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Decision path</text>
+        </svg>
+      </div>
+    </section>
+
+    <section class="cards" aria-label="Architecture principles">
+      <article class="card is-focal">
+        <p class="card-label">The architectural question</p>
+        <h2>What must the system be able to prove?</h2>
+        <p>What acted, under whose authority, using which evidence and dependencies, with what result, and with what level of assurance?</p>
+      </article>
+      <article class="card">
+        <p class="card-label">The key separation</p>
+        <h2>Completion is not quality.</h2>
+        <p>Execution proves that an output exists. Evaluation supplies evidence that the output met defined quality and acceptance criteria.</p>
+      </article>
+      <article class="card">
+        <p class="card-label">The constraint</p>
+        <h2>Trace responsibility, not everything.</h2>
+        <p>Preserve the chain of responsibility without archiving every prompt, response, or intermediate message.</p>
+      </article>
+    </section>
+
+    <section class="thesis">
+      <p class="eyebrow">Why plan early</p>
+      <blockquote>Retrofitted logging captures what the implementation emits. Architecture-led logging begins with what the organization must prove.</blockquote>
+    </section>
+
+    <section class="proof" aria-label="Architectural implications">
+      <article>
+        <h2>The value is controlled evolution.</h2>
+        <p>As agents, services, policies, and automations change independently, the system retains enough memory to distinguish what changed, what acted, what evidence shaped the outcome, and how confidently that outcome was judged.</p>
+      </article>
+      <article>
+        <h2>What remains to prove.</h2>
+        <p>An architecture document is not observability. The first validation should show one complete workflow preserving identity, authority, evidence lineage, and outcome, while declaring each stage observed, missing, or reconstructed—without collecting unnecessary content.</p>
+      </article>
+    </section>
+
+    <footer>
+      <span>Day One · Agentic-system architecture</span>
+      <span>Agentic System Notes</span>
+    </footer>
+  </main>
+</body>
+</html>
