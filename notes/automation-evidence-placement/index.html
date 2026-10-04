@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="blog:repository" content="andrewlyu/agentic-sys-notes">
+<meta name="blog:branch" content="main">
+<meta name="blog:article-path" content="notes/automation-evidence-placement/index.html">
+<meta name="blog:markdown-sha256" content="e25904206993a5da33c1b846fed24871931ed45360ee6affa5da5a81d523b351">
+<meta name="blog:publication-id" content="automation-evidence-placement-20261004-v3">
+<link rel="canonical" href="https://andrewlyu.github.io/agentic-sys-notes/notes/automation-evidence-placement/">
+<title>Where Should Automation Evidence Live?</title>
+<style>
+:root{--paper:#f5f5f5;--ink:#2d3142;--muted:#4f5d75;--soft:#7a8399;--rule:#bfc0c0;--rule-light:rgba(45,49,66,.14);--accent:#eb6c36;--accent-tint:rgba(235,108,54,.08);--blue-tint:rgba(46,90,168,.06);--link:#2e5aa8;--sans:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--serif:Georgia,"Times New Roman",serif;--mono:"SFMono-Regular",Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.68}
+main{width:min(100% - 40px,820px);margin:0 auto}
+article{padding:64px 0 80px}
+h1{margin:0 0 32px;font-family:var(--serif);font-size:clamp(40px,7vw,60px);font-weight:400;line-height:1.04;letter-spacing:-.025em}
+h1::before{content:"ARCHITECTURE NOTE · EVIDENCE BOUNDARIES";display:block;margin-bottom:18px;color:var(--muted);font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.15em}
+h1+p{font-size:20px;line-height:1.52}
+h2{margin:48px 0 14px;font-family:var(--serif);font-size:clamp(27px,4vw,34px);font-weight:400;line-height:1.16}
+h3{margin:32px 0 10px;font-size:19px;line-height:1.3}
+p,ul{margin:0 0 21px}
+ul{padding-left:24px}
+li{margin:7px 0;padding-left:3px}
+a{color:var(--link);text-decoration-thickness:1px;text-underline-offset:3px}
+strong{font-weight:650}
+figure{margin:42px 0 56px}
+.diagram-container{width:100%;overflow-x:auto;border-top:1px solid var(--rule-light);border-bottom:1px solid var(--rule-light);padding:20px 0}
+svg{display:block;width:100%;min-width:960px;height:auto}
+.zone{fill:var(--paper);stroke:var(--rule);stroke-width:1.3}
+.zone-focus{fill:var(--accent-tint);stroke:var(--accent);stroke-width:2}
+.node{fill:var(--paper);stroke:var(--ink);stroke-width:1.4}
+.node-soft{fill:var(--blue-tint);stroke:var(--muted);stroke-width:1.3}
+.flow{fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#placement-arrow)}
+.observe{fill:none;stroke:var(--soft);stroke-width:1.5;stroke-linecap:round;stroke-dasharray:5 5;marker-end:url(#placement-arrow-soft)}
+.heading{fill:var(--ink);font-family:var(--sans);font-size:14px;font-weight:700;text-anchor:middle}
+.body-copy{fill:var(--muted);font-family:var(--sans);font-size:10px;text-anchor:middle}
+.tag{fill:var(--muted);font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-anchor:middle}
+.decision{fill:var(--ink);font-family:var(--sans);font-size:11px;font-weight:650;text-anchor:middle}
+.edge-label{fill:var(--soft);font-family:var(--mono);font-size:8px;letter-spacing:.07em;text-anchor:middle}
+figcaption{margin-top:12px;color:var(--muted);font-size:14px;line-height:1.5}
+article>h2:last-of-type{margin-top:56px;padding-top:22px;border-top:1px solid var(--rule-light);font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+article>h2:last-of-type+ul{color:var(--muted);font-size:14px;line-height:1.5}
+@media(max-width:600px){body{font-size:16px}main{width:min(100% - 28px,820px)}article{padding:42px 0 60px}h1+p{font-size:18px}}
+@media print{.diagram-container{overflow-x:visible}svg{min-width:0}}
+</style>
+</head>
+<body>
+<main>
+<article>
+<h1>Where Should Automation Evidence Live?</h1>
+<p>Automation needs telemetry to explain what happened. It may also need an authoritative record before taking a governed action. Treating them as the same thing gives logging infrastructure authority it should not have.</p>
+<p>The separation is straightforward:</p>
+<ul>
+<li><strong>Observability reports behavior</strong> through traces, metrics, and logs.</li>
+<li><strong>An evidence service commits a bounded record</strong> and returns a verifiable receipt.</li>
+<li><strong>A controller applies policy</strong> to decide what the receipt permits.</li>
+</ul>
+<p>A receipt proves that a record was accepted under a declared contract—not that it is true or that the next action is safe.</p>
+<figure>
+<div class="diagram-container">
+<svg viewBox="0 0 960 600" role="img" aria-labelledby="placement-title placement-desc">
+<title id="placement-title">Three placements for an automation evidence boundary</title>
+<desc id="placement-desc">An in-process service favors low-cost logical separation, a shared transaction favors local atomicity, and an independent service favors operational isolation while adding network ambiguity. In every option the controller decides, evidence commits, and observability only reports.</desc>
+<defs>
+<marker id="placement-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#4f5d75"></path></marker>
+<marker id="placement-arrow-soft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7a8399"></path></marker>
+</defs>
+<path class="flow" d="M 268 76 L 368 76"></path>
+<path class="flow" d="M 596 76 L 692 76"></path>
+<path class="observe" d="M 482 108 L 482 148"></path>
+<rect class="node" x="40" y="40" width="228" height="68" rx="6"></rect>
+<text class="tag" x="154" y="66">CONTROL</text>
+<text class="heading" x="154" y="88">Controller decides</text>
+<rect class="zone-focus" x="368" y="40" width="228" height="68" rx="6"></rect>
+<text class="tag" x="482" y="66">AUTHORITY</text>
+<text class="heading" x="482" y="88">Evidence commits</text>
+<rect class="node-soft" x="692" y="40" width="228" height="68" rx="6"></rect>
+<text class="tag" x="806" y="66">TELEMETRY</text>
+<text class="heading" x="806" y="88">Observability reports</text>
+<text class="edge-label" x="480" y="163">SAME RESPONSIBILITIES · DIFFERENT PLACEMENT</text>
+<rect class="zone-focus" x="32" y="188" width="280" height="268" rx="8"></rect>
+<text class="tag" x="172" y="218">A · ONE PROCESS</text>
+<text class="heading" x="172" y="244">In-process evidence service</text>
+<rect class="node" x="68" y="268" width="208" height="56" rx="6"></rect>
+<text class="body-copy" x="172" y="292">Controller → evidence module → store</text>
+<text class="body-copy" x="172" y="309">Logical boundary; shared process fate</text>
+<text class="tag" x="172" y="355">OPTIMIZES FOR</text>
+<text class="decision" x="172" y="378">Low-cost separation</text>
+<line x1="68" y1="400" x2="276" y2="400" stroke="#bfc0c0" stroke-width="1"></line>
+<text class="body-copy" x="172" y="425">No independent availability</text>
+<text class="body-copy" x="172" y="441">or security boundary</text>
+<rect class="zone" x="340" y="188" width="280" height="268" rx="8"></rect>
+<text class="tag" x="480" y="218">B · ONE TRANSACTION</text>
+<text class="heading" x="480" y="244">Business state + evidence</text>
+<rect class="node" x="376" y="268" width="208" height="56" rx="6"></rect>
+<text class="body-copy" x="480" y="292">One database commit or rollback</text>
+<text class="body-copy" x="480" y="309">Strong local atomicity</text>
+<text class="tag" x="480" y="355">OPTIMIZES FOR</text>
+<text class="decision" x="480" y="378">One consistency boundary</text>
+<line x1="376" y1="400" x2="584" y2="400" stroke="#bfc0c0" stroke-width="1"></line>
+<text class="body-copy" x="480" y="425">Couples evidence to domain</text>
+<text class="body-copy" x="480" y="441">persistence</text>
+<rect class="zone" x="648" y="188" width="280" height="268" rx="8"></rect>
+<text class="tag" x="788" y="218">C · SEPARATE SERVICE</text>
+<text class="heading" x="788" y="244">Independent evidence authority</text>
+<rect class="node" x="684" y="268" width="208" height="56" rx="6"></rect>
+<text class="body-copy" x="788" y="292">Controller → network → service</text>
+<text class="body-copy" x="788" y="309">Separate process and storage</text>
+<text class="tag" x="788" y="355">OPTIMIZES FOR</text>
+<text class="decision" x="788" y="378">Operational isolation</text>
+<line x1="684" y1="400" x2="892" y2="400" stroke="#bfc0c0" stroke-width="1"></line>
+<text class="body-copy" x="788" y="425">Adds network ambiguity</text>
+<text class="body-copy" x="788" y="441">and service operations</text>
+<path class="flow" d="M 172 456 L 172 500"></path>
+<path class="flow" d="M 480 456 L 480 500"></path>
+<path class="flow" d="M 788 456 L 788 500"></path>
+<rect class="node-soft" x="32" y="500" width="280" height="64" rx="6"></rect>
+<text class="tag" x="172" y="522">CHOOSE WHEN YOU NEED</text>
+<text class="decision" x="172" y="545">Logical separation</text>
+<rect class="node-soft" x="340" y="500" width="280" height="64" rx="6"></rect>
+<text class="tag" x="480" y="522">CHOOSE WHEN YOU NEED</text>
+<text class="decision" x="480" y="545">Local atomicity</text>
+<rect class="node-soft" x="648" y="500" width="280" height="64" rx="6"></rect>
+<text class="tag" x="788" y="522">CHOOSE WHEN YOU NEED</text>
+<text class="decision" x="788" y="545">Independent authority</text>
+</svg>
+</div>
+<figcaption>Choose the boundary that matches the consistency and isolation the automation actually needs. Telemetry remains outside the authority path.</figcaption>
+</figure>
+<h2>Three places for the evidence boundary</h2>
+<p>There are three common placements, and each makes a different tradeoff.</p>
+<h3>A. An in-process evidence service</h3>
+<p>The controller calls a separate evidence module in the same process. This creates a logical boundary at low operating cost, but not an independent security or availability boundary.</p>
+<h3>B. One transaction for business state and evidence</h3>
+<p>Business state and evidence are written in one database transaction, so all changes commit or none do. This gives strong local atomicity but couples evidence to domain persistence. External services remain outside that transaction; an outbox still requires retry and duplicate handling.</p>
+<h3>C. An independently deployed evidence service</h3>
+<p>The controller calls a separate service with its own storage. This supports independent operation and multiple clients, but adds network ambiguity: after a timeout, the controller must use idempotency or inspection to learn whether the commit succeeded.</p>
+<h2>Choose by transaction ownership</h2>
+<p>Choose according to where the governed effect and its consistency boundary actually live.</p>
+<ul>
+<li><strong>Logical separation inside one application:</strong> prefer A, while accepting that it creates no independent process or security boundary.</li>
+<li><strong>Atomic business state and evidence in one database:</strong> prefer B, while accepting that evidence becomes coupled to domain persistence.</li>
+<li><strong>Shared authority across processes, teams, or zones:</strong> prefer C, while accepting that network ambiguity and service operations become product concerns.</li>
+</ul>
+<p>External effects do not become transactional merely because their evidence is durable. The controller still needs idempotency or inspection before retrying an uncertain outcome.</p>
+<h2>Start with the smallest honest boundary</h2>
+<p>Start in-process when logical separation is enough. Preserve stable identities, idempotency, typed outcomes, and verifiable receipts; move to an independent service only when real isolation or multi-client needs justify its cost.</p>
+<p>The durable principle is simple: <strong>the evidence service makes a record authoritative; the controller decides what that record permits; observability reports the execution without governing it.</strong></p>
+<h2>Sources</h2>
+<ul>
+<li><a href="https://opentelemetry.io/docs/specs/otel/error-handling/">OpenTelemetry: Error handling</a></li>
+<li><a href="https://www.sqlite.org/atomiccommit.html">SQLite: Atomic Commit</a></li>
+<li><a href="https://docs.aws.amazon.com/en_en/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html">AWS Prescriptive Guidance: Transactional outbox pattern</a></li>
+</ul>
+</article>
+</main>
+</body>
+</html>
