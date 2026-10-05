@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="blog:repository" content="andrewlyu/agentic-sys-notes">
+<meta name="blog:branch" content="main">
+<meta name="blog:article-path" content="notes/ai-value-beyond-deterministic-baseline/index.html">
+<meta name="blog:markdown-sha256" content="92e08ae25831e403c9d6b7206bf6952d9b7b41962c7f75b2bf26319774decf14">
+<meta name="blog:publication-id" content="ai-value-beyond-baseline-20261005-v6">
+<link rel="canonical" href="https://andrewlyu.github.io/agentic-sys-notes/notes/ai-value-beyond-deterministic-baseline/">
+<title>When Does AI Add Value Beyond a Deterministic Baseline?</title>
+<style>
+:root{--paper:#f5f5f5;--ink:#2d3142;--muted:#4f5d75;--rule:rgba(45,49,66,.16);--accent:#eb6c36;--accent-tint:rgba(235,108,54,.08);--link:#2e5aa8;--sans:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--serif:Georgia,"Times New Roman",serif;--mono:"SFMono-Regular",Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.68}
+main{width:min(100% - 40px,780px);margin:0 auto}
+article{padding:64px 0 80px}
+h1{margin:0 0 30px;font-family:var(--serif);font-size:clamp(40px,7vw,60px);font-weight:400;line-height:1.04;letter-spacing:-.025em}
+h1::before{content:"EVALUATION NOTE · AI AND BASELINES";display:block;margin-bottom:18px;color:var(--muted);font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.15em}
+h1+p{font-size:20px;line-height:1.52}
+h1+p+p{margin:30px 0 38px;padding:19px 22px;border-left:3px solid var(--accent);background:var(--accent-tint);font-size:18px;line-height:1.5}
+h2{margin:48px 0 14px;font-family:var(--serif);font-size:clamp(27px,4vw,34px);font-weight:400;line-height:1.16}
+p,ul,ol{margin:0 0 21px}
+ul,ol{padding-left:25px}
+li{margin:7px 0;padding-left:3px}
+a{color:var(--link);text-decoration-thickness:1px;text-underline-offset:3px}
+strong{font-weight:650}
+article>h2:last-of-type{margin-top:56px;padding-top:22px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+article>h2:last-of-type+ul{color:var(--muted);font-size:14px;line-height:1.5}
+@media(max-width:600px){body{font-size:16px}main{width:min(100% - 28px,780px)}article{padding:42px 0 60px}h1+p{font-size:18px}h1+p+p{padding:16px 18px;font-size:17px}}
+</style>
+</head>
+<body>
+<main>
+<article>
+<h1>When Does AI Add Value Beyond a Deterministic Baseline?</h1>
+<p>AI can turn a pile of logs, sensor readings, and delayed messages into a clear explanation of an incident. That is useful—but clarity alone does not justify adding an AI model. If a simpler program can produce an accurate, conservative reconstruction, the AI must demonstrate something more.</p>
+<p>The practical question is not “Can AI explain what happened?” It is: <strong>Does AI improve the result enough to justify its additional cost, variability, and operational risk?</strong></p>
+<p>An independent <a href="https://link.springer.com/article/10.1007/s00170-026-19043-z">2026 fault-diagnosis study</a> makes the need for this comparison concrete. It argues that the LLM component should be “assessed according to the value it actually provides” rather than assumed to outperform established classifiers. On identical NASA FD001 cases, the reported raw-LLM accuracy was 0.618, while Logistic Regression, SVM-RBF, and Random Forest achieved 0.920, 0.920, and 0.930. The point is not that conventional models always win. It is that AI value depends on the task and evidence—and cannot be inferred from the model category.</p>
+<h2>Begin with a fair reference</h2>
+<p>A <strong>baseline</strong> is a simpler reference method that performs the same task as the AI. It is not the evaluator’s ground truth.</p>
+<p>For incident reconstruction, a deterministic baseline might apply fixed rules to observations:</p>
+<ul>
+<li>order events by timestamp;</li>
+<li>discard duplicates;</li>
+<li>flag conflicting reports;</li>
+<li>identify intervals where evidence is missing; and</li>
+<li>report a range when the evidence cannot establish the event time.</li>
+</ul>
+<p>The AI and baseline should receive the same evidence, the same question, and the same output requirements. Private ground truth—what the evaluator knows actually happened—should be withheld from both until scoring. Otherwise, the comparison measures access to information rather than reconstruction ability.</p>
+<p>This distinction matters because a polished AI answer can look more capable even when it is less faithful to the evidence.</p>
+<h2>AI has two ways to earn its place</h2>
+<p>The first is straightforward: <strong>outperform the baseline</strong>.</p>
+<p>That might mean fewer factual errors, better event ordering, fewer contradictions, more complete use of the available evidence, or better-calibrated confidence. The measures should be chosen before seeing the results and evaluated on incidents that were not used to tune either method.</p>
+<p>The second path is to <strong>complement the baseline</strong>.</p>
+<p>A deterministic method may be excellent at enforcing hard rules but weak at connecting heterogeneous evidence. An AI system might add value by:</p>
+<ul>
+<li>explaining why several observations support different hypotheses;</li>
+<li>preserving uncertainty in language an investigator can act on;</li>
+<li>connecting a fault code, a log message, and a sensor pattern;</li>
+<li>identifying which missing evidence would resolve the ambiguity; or</li>
+<li>reducing the time a human needs to understand the incident.</li>
+</ul>
+<p>These benefits still need measurement. “The explanation sounds useful” is not enough. A team can measure investigator time, hypothesis quality, unsupported claims, escalation decisions, or how often the explanation leads reviewers to the correct conclusion.</p>
+<h2>Consider a disrupted robot report</h2>
+<p>Imagine a robot observes that an item is present. A network interruption begins, the item disappears, and another robot later reports it absent. When the connection returns, a buffered observation arrives with a shifted local timestamp, followed by a duplicate.</p>
+<p>A good deterministic reconstruction can establish that the change occurred within a bounded interval, identify the delayed and duplicate messages, and leave the removal time unknown.</p>
+<p>An AI reconstruction may make the report easier to understand. It may connect the interruption, clock difference, and buffered delivery into a coherent explanation. But if it invents an unsupported removal time, it is worse than the baseline. Fluency has destroyed uncertainty that the evidence required the system to preserve.</p>
+<p>That is why the baseline is valuable: it establishes the minimum honest behavior. The AI is evaluated on whether it improves that behavior without weakening it.</p>
+<h2>What a fair comparison requires</h2>
+<p>The robot example sets a minimum: preserve uncertainty and judge the AI against a simpler method using the same evidence. A fair comparison also requires controlled incidents, preserved evidence, defined outcomes, and equal evaluation conditions. Recent robotics and embedded-systems work demonstrates these ingredients separately:</p>
+<ul>
+<li><strong>Controlled incidents.</strong> The <a href="https://www.mathworks.com/help/fault-analyzer/ug/robot-fault-sensitivity-study-example.html">MathWorks warehouse-robot example</a> instructs engineers to “inject faults into the control system to determine the conditions that affect when the robot detects the fault.” That demonstrates controlled fault generation and verification—not AI reconstruction.</li>
+<li><strong>Defined outcomes.</strong> <a href="https://tier4.co.jp/en/updates/technology/20250313">TIER IV’s Autoware evaluation</a> defines tests by “defining the driving environment and expected system behavior to check if the system performs as intended.” It also reports more than 4,000 Planning-component scenarios as of 2024.</li>
+<li><strong>Preserved evidence.</strong> The <a href="https://discourse.openrobotics.org/t/gsoc-2025-improvements-to-ros-2-tracing/50063">ROS 2 tracing project</a> describes a “flight recorder capability that maintains a rolling history of events and can dump data when something interesting occurs.” That preserves evidence for later diagnosis.</li>
+<li><strong>Tool-assisted investigation.</strong> <a href="https://www.foxglove.dev/blog/foxglove-goes-agentic">Foxglove’s agent workflow</a> can “look at a test failure in code, correlate it with the relevant robot recording, and prepare that recording for inspection.” This is an agentic investigation example, not a baseline comparison.</li>
+</ul>
+<p>These sources provide ingredients for evaluation; they do not show that AI wins. The missing step is a like-for-like comparison.</p>
+<h2>Use a simple decision rule</h2>
+<p>Before adding AI to an incident-reconstruction workflow, ask:</p>
+<ol>
+<li>Does a credible simpler baseline already exist?</li>
+<li>Do both methods receive identical allowed evidence and output requirements?</li>
+<li>Are they evaluated on held-out incidents using predeclared measures?</li>
+<li>Does the AI improve correctness or provide complementary value that is actually measured?</li>
+<li>Is that improvement worth the added latency, cost, variability, and review burden?</li>
+</ol>
+<p>If the answer to the fourth or fifth question is no, the AI has not earned a role in that workflow. Use the simpler method.</p>
+<p>If the AI does add measurable value, the baseline remains useful. It provides a stable comparison, a fallback, and a guardrail against explanations that are persuasive but unsupported.</p>
+<p>The goal is not to make every reconstruction intelligent. It is to make every reconstruction trustworthy—and to use AI only where it demonstrably helps.</p>
+<h2>Sources</h2>
+<ul>
+<li><a href="https://www.mathworks.com/help/fault-analyzer/ug/robot-fault-sensitivity-study-example.html">MathWorks: Conduct Fault Sensitivity Study on Warehouse Robot</a></li>
+<li><a href="https://tier4.co.jp/en/updates/technology/20250313">TIER IV: Introduction to obstacle avoidance in Autoware</a></li>
+<li><a href="https://discourse.openrobotics.org/t/gsoc-2025-improvements-to-ros-2-tracing/50063">Open Robotics community: GSoC 2025—Improvements to ROS 2 Tracing</a></li>
+<li><a href="https://link.springer.com/article/10.1007/s00170-026-19043-z">Explainable LLM-assisted fault diagnosis for smart manufacturing</a></li>
+<li><a href="https://www.foxglove.dev/blog/foxglove-goes-agentic">Foxglove goes agentic</a></li>
+</ul>
+</article>
+</main>
+</body>
+</html>
