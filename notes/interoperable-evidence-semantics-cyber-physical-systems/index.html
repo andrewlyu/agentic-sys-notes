@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="blog:repository" content="andrewlyu/agentic-sys-notes">
+<meta name="blog:branch" content="main">
+<meta name="blog:article-path" content="notes/interoperable-evidence-semantics-cyber-physical-systems/index.html">
+<meta name="blog:markdown-sha256" content="104e85f1e4b3c6d0d890efba7ec10df583728dafa4d6eaec5202cfec21dd79f0">
+<meta name="blog:publication-id" content="interoperable-evidence-semantics-cps-20261006-v4">
+<link rel="canonical" href="https://andrewlyu.github.io/agentic-sys-notes/notes/interoperable-evidence-semantics-cyber-physical-systems/">
+<title>Interoperable Evidence Semantics for Distributed Cyber-Physical Systems: Applying CloudEvents, SOSA/SSN, and W3C PROV</title>
+<style>
+:root{--paper:#f4f5f2;--ink:#263238;--muted:#52636a;--rule:rgba(38,50,56,.16);--accent:#176b78;--accent-tint:rgba(23,107,120,.08);--link:#155d9b;--sans:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--serif:Georgia,"Times New Roman",serif;--mono:"SFMono-Regular",Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.68}
+main{width:min(100% - 40px,820px);margin:0 auto}
+article{padding:64px 0 80px}
+h1{margin:0 0 30px;font-family:var(--serif);font-size:clamp(38px,6.5vw,58px);font-weight:400;line-height:1.04;letter-spacing:-.025em}
+h1::before{content:"ARCHITECTURE NOTE · EVIDENCE INTEROPERABILITY";display:block;margin-bottom:18px;color:var(--muted);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.14em}
+h1+p{font-size:20px;line-height:1.52}
+h1+p+p{margin:28px 0 38px;padding:19px 22px;border-left:3px solid var(--accent);background:var(--accent-tint);font-size:18px;line-height:1.5}
+h2{margin:48px 0 14px;font-family:var(--serif);font-size:clamp(27px,4vw,34px);font-weight:400;line-height:1.16}
+p,ul,ol{margin:0 0 21px}
+ul,ol{padding-left:25px}
+li{margin:7px 0;padding-left:3px}
+a{color:var(--link);text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{text-decoration-thickness:2px}
+strong{font-weight:650}
+article>h2:last-of-type{margin-top:56px;padding-top:22px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+article>h2:last-of-type+ul{color:var(--muted);font-size:14px;line-height:1.5}
+@media(max-width:600px){body{font-size:16px}main{width:min(100% - 28px,820px)}article{padding:42px 0 60px}h1+p{font-size:18px}h1+p+p{padding:16px 18px;font-size:17px}}
+</style>
+</head>
+<body>
+<main>
+<article>
+<h1>Interoperable Evidence Semantics for Distributed Cyber-Physical Systems: Applying CloudEvents, SOSA/SSN, and W3C PROV</h1>
+<p>Distributed cyber-physical systems can exchange messages successfully and still disagree about what those messages mean. A receiving system may recognize an identifier and timestamp yet remain unable to tell what was observed, which physical property the result describes, or how a later conclusion was derived.</p>
+<p>That gap matters wherever software decisions depend on evidence from the physical world: manufacturing, energy, transportation, buildings, environmental monitoring, and connected medical equipment. The <a href="https://www.nist.gov/publications/framework-cyber-physical-systems-volume-1-overview">NIST Cyber-Physical Systems Framework</a> treats interoperability as a cross-domain concern because these systems combine computational, communication, and physical capabilities across organizational and technical boundaries.</p>
+<p>A practical response is to use established standards in layers. <strong>CloudEvents</strong> can identify and carry an event. <strong>SOSA/SSN</strong> can express what an observation means. <strong>W3C PROV</strong> can describe how evidence was produced or derived. Each answers a different question; none is a complete data model by itself.</p>
+<h2>Exchange is not the same as shared meaning</h2>
+<p>Two systems can agree on JSON, a message broker, and a timestamp format while assigning different meanings to the same data. One may treat a time as the moment a physical phenomenon occurred; another may treat it as the moment a result entered a database. Both messages are syntactically valid, but their interpretations conflict.</p>
+<p>Interoperability therefore has layers. Transport and serialization make data movable. Event context makes records identifiable and routable. Domain semantics make observations interpretable. Provenance makes transformations and dependencies inspectable.</p>
+<p>The goal is not to merge three standards into a new universal ontology. It is to give each standard a clear responsibility and define the mappings between them.</p>
+<h2>CloudEvents: portable event identity and context</h2>
+<p><a href="https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md">CloudEvents 1.0.2</a> defines a vendor-neutral format for event data. It separates event context—such as source, identifier, type, and optional occurrence time—from the domain-specific payload. That division lets generic infrastructure route, filter, and inspect an event without understanding every payload schema.</p>
+<p>Its identity rule is deliberately scoped: the combination of <code>source</code> and <code>id</code> identifies a distinct event. An <code>id</code> is not assumed to be globally unique on its own. This supports independent producers while giving consumers a stable pair for duplicate detection.</p>
+<p>CloudEvents does not define what a temperature reading, machine state, clinical measurement, or traffic observation means. It standardizes the event envelope, not the domain semantics inside it. Its graduation within the Cloud Native Computing Foundation in 2024 reflects its maturity as an interoperable event format, but does not change that boundary (<a href="https://www.cncf.io/announcements/2024/01/25/cloud-native-computing-foundation-announces-the-graduation-of-cloudevents/">CNCF, 2024</a>).</p>
+<h2>SOSA/SSN: the semantics of an observation</h2>
+<p>The <a href="https://www.w3.org/TR/vocab-ssn-2023/">W3C Semantic Sensor Network ontology, 2023 Edition</a> supplies a domain-neutral vocabulary for sensors, observations, samples, and actuations. Its lightweight SOSA core makes several distinctions that an event envelope cannot:</p>
+<ul>
+<li>the <strong>observation</strong> is the act that produced a result;</li>
+<li>the <strong>feature of interest</strong> is the thing whose property is being examined;</li>
+<li>the <strong>observable property</strong> states what characteristic is being measured;</li>
+<li>the <strong>procedure</strong> describes how the observation was made;</li>
+<li>the <strong>result</strong> records the outcome; and</li>
+<li><strong>phenomenon time</strong> and <strong>result time</strong> distinguish when the observed condition applied from when the result became available.</li>
+</ul>
+<p>Those concepts travel well across domains. A vibration reading from industrial equipment, a voltage measurement in a power network, and an air-quality sample can use the same observation pattern while retaining their own domain vocabularies.</p>
+<p>SOSA/SSN provides a semantic frame, not a transport guarantee. It does not decide how messages are retried, how clocks are synchronized, or whether a claimed observation is trustworthy.</p>
+<h2>W3C PROV: evidence lineage</h2>
+<p><a href="https://www.w3.org/TR/prov-dm/">W3C PROV-DM</a> describes provenance through entities, activities, agents, and relations among them. In practical terms, it can represent a source observation as an entity, a calibration or aggregation step as an activity, and a responsible system or organization as an agent.</p>
+<p>PROV also distinguishes generation from derivation. An entity can be generated by an activity and derived from an earlier entity. This lets a consumer ask whether a report came directly from an instrument, from a transformed dataset, or from a chain of analytical steps.</p>
+<p>Lineage is evidence about origin and transformation. It is not proof that a value is true, a procedure is correct, or an actor was authorized. Those judgments require validation, policy, and controls outside the provenance graph.</p>
+<h2>How the layers compose</h2>
+<p>The three standards form a useful separation of concerns:</p>
+<ol>
+<li><strong>CloudEvents answers:</strong> Which event record is this, where did it originate, and what event category does it carry?</li>
+<li><strong>SOSA/SSN answers:</strong> What was observed, which property and feature were involved, how was the observation made, and what result was produced?</li>
+<li><strong>W3C PROV answers:</strong> Which activities and agents produced or transformed the evidence, and which earlier entities contributed to it?</li>
+</ol>
+<p>A receiving system can first use CloudEvents context to handle and deduplicate a record. It can then interpret an observation using SOSA/SSN concepts. If the result was calibrated, aggregated, or incorporated into a later report, PROV can preserve that lineage.</p>
+<p>This composition is intentionally loose. CloudEvents need not become an ontology. SOSA/SSN need not become a message envelope. PROV need not redefine the observed property. Stable mappings between the layers are more valuable than collapsing their responsibilities.</p>
+<h2>What an implementation must still define</h2>
+<p>Standards reuse narrows the design space; it does not remove design work. An implementation profile still needs explicit rules for:</p>
+<ul>
+<li>identity scope and lifecycle, including what constitutes a new event;</li>
+<li>duplicate delivery, replay, and out-of-order arrival;</li>
+<li>clock uncertainty and the meaning of every time value;</li>
+<li>missing, partial, contradictory, or late evidence;</li>
+<li>integrity protection and verification of transformations;</li>
+<li>vocabulary governance and versioning; and</li>
+<li>access boundaries for sensitive observations and provenance.</li>
+</ul>
+<p>Recent NIST work on <a href="https://www.nist.gov/programs-projects/infrastructure-agile-manufacturing-data-standards">agile manufacturing data standards</a> illustrates why this remains an active engineering concern: networked cyber-physical components need standards that can support interoperable information exchange as systems evolve.</p>
+<p>These choices should be testable. For example, a profile should say whether retransmission preserves event identity, how uncertainty accompanies a time estimate, and what happens when lineage is incomplete. The standards provide vocabulary and structure; the profile supplies operational rules.</p>
+<p>This composition describes standards-aligned design. Demonstrating conformance requires a named profile, normative mappings, and test evidence—a separate subject deserving its own treatment.</p>
+<h2>A reusable pattern across domains</h2>
+<p>The layered pattern applies wherever evidence crosses system boundaries:</p>
+<ul>
+<li>an industrial controller emits a portable event describing an equipment observation, followed by a calibrated result with preserved lineage;</li>
+<li>an energy platform exchanges measurements from independently operated assets while retaining the meaning and origin of each result;</li>
+<li>a transportation system relates infrastructure observations to derived operational assessments; or</li>
+<li>an environmental network combines samples from different procedures without erasing how each result was obtained.</li>
+</ul>
+<p>This pattern applies wherever evidence must move between independently designed systems while preserving its meaning and lineage.</p>
+<p>CloudEvents, SOSA/SSN, and W3C PROV provide credible building blocks for that purpose. Their value comes from disciplined composition: one layer for event context, one for observation semantics, and one for provenance—joined by an explicit implementation profile and described with claims no broader than the evidence supports.</p>
+<h2>References</h2>
+<ul>
+<li><a href="https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md">CloudEvents Specification, Version 1.0.2</a>, CloudEvents project, 2022.</li>
+<li><a href="https://www.cncf.io/announcements/2024/01/25/cloud-native-computing-foundation-announces-the-graduation-of-cloudevents/">Cloud Native Computing Foundation Announces the Graduation of CloudEvents</a>, CNCF, 2024.</li>
+<li><a href="https://www.nist.gov/publications/framework-cyber-physical-systems-volume-1-overview">Framework for Cyber-Physical Systems: Volume 1, Overview</a>, NIST, 2017.</li>
+<li><a href="https://www.nist.gov/programs-projects/infrastructure-agile-manufacturing-data-standards">Infrastructure for Agile Manufacturing Data Standards</a>, NIST, updated 2025.</li>
+<li><a href="https://www.w3.org/TR/prov-dm/">PROV-DM: The PROV Data Model</a>, W3C, 2013.</li>
+<li><a href="https://www.w3.org/TR/vocab-ssn-2023/">Semantic Sensor Network Ontology, 2023 Edition</a>, W3C, 2023.</li>
+</ul>
+</article>
+</main>
+</body>
+</html>
