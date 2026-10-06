@@ -62,4 +62,3 @@ Implementation is complete when:
 - desktop and mobile layouts remain readable with no unintended horizontal overflow;
 - the page remains usable at 200% browser text enlargement; and
 - the published GitHub Pages root serves the new portal while existing note URLs continue to return successfully.
-
