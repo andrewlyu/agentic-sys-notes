@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="blog:repository" content="andrewlyu/agentic-sys-notes">
+<meta name="blog:branch" content="main">
+<meta name="blog:article-path" content="notes/why-pass-fail-is-not-enough-for-ai-evaluation/index.html">
+<meta name="blog:markdown-sha256" content="5020fc576a74550dc87a063b67c50247ac7a540c4e399191b68790eedf5c18b9">
+<meta name="blog:publication-id" content="pass-fail-not-enough-20261007-v3">
+<link rel="canonical" href="https://andrewlyu.github.io/agentic-sys-notes/notes/why-pass-fail-is-not-enough-for-ai-evaluation/">
+<title>Why Pass/Fail Is Not Enough for AI Evaluation</title>
+<style>
+:root{--paper:#f4f3ef;--ink:#242832;--muted:#59606f;--rule:rgba(36,40,50,.16);--accent:#b94e38;--accent-tint:rgba(185,78,56,.07);--link:#245a92;--sans:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--serif:Georgia,"Times New Roman",serif;--mono:"SFMono-Regular",Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.68}
+main{width:min(100% - 40px,780px);margin:0 auto}
+article{padding:64px 0 80px}
+h1{margin:0 0 30px;font-family:var(--serif);font-size:clamp(40px,7vw,60px);font-weight:400;line-height:1.04;letter-spacing:-.025em}
+h1::before{content:"EVALUATION NOTE · RESULT STATES";display:block;margin-bottom:18px;color:var(--muted);font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.15em}
+h1+p{font-size:20px;line-height:1.52}
+h1+p+p{margin:30px 0 38px;padding:19px 22px;border-left:3px solid var(--accent);background:var(--accent-tint);font-size:18px;line-height:1.5}
+h2{margin:48px 0 14px;font-family:var(--serif);font-size:clamp(27px,4vw,34px);font-weight:400;line-height:1.16}
+p,ul{margin:0 0 21px}
+ul{padding-left:25px}
+li{margin:7px 0;padding-left:3px}
+a{color:var(--link);text-decoration-thickness:1px;text-underline-offset:3px}
+strong{font-weight:650}
+code{padding:.08em .3em;border-radius:3px;background:rgba(36,40,50,.07);font-family:var(--mono);font-size:.88em}
+.outcomes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0 28px;padding:0;list-style:none}
+.outcomes li{margin:0;padding:15px 17px;border:1px solid var(--rule);border-radius:5px;background:rgba(255,255,255,.34)}
+.decision-matrix{width:min(960px,calc(100vw - 40px));max-width:none;margin:34px 0 42px 50%;transform:translateX(-50%)}
+.diagram-container{width:100%;max-width:100%;min-width:0;overflow-x:auto;border:1px solid var(--rule);border-radius:8px;background:#f5f5f5}
+.result-matrix-svg{display:block;width:100%;min-width:960px;height:auto;font-family:"Geist",Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.matrix-tag,.matrix-axis,.matrix-legend{font-family:"Geist Mono","SFMono-Regular",Consolas,monospace;text-transform:uppercase}
+.matrix-tag{font-size:8px;letter-spacing:.18em;fill:#59606f}
+.matrix-axis{font-size:9px;letter-spacing:.18em;fill:#2d3142}
+.matrix-title{font-size:16px;font-weight:600;fill:#2d3142}
+.matrix-copy{font-size:11px;fill:#4f5d75}
+.matrix-legend{font-size:9px;letter-spacing:.08em;fill:#4f5d75}
+.rule{margin-top:34px;padding:19px 22px;border-left:3px solid var(--accent);background:var(--accent-tint);font-size:18px;line-height:1.5}
+article>h2:last-of-type{margin-top:56px;padding-top:22px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+article>h2:last-of-type+ul{color:var(--muted);font-size:14px;line-height:1.5}
+@media(max-width:600px){body{font-size:16px}main{width:min(100% - 28px,780px)}article{padding:42px 0 60px}h1+p{font-size:18px}h1+p+p,.rule{padding:16px 18px;font-size:17px}.outcomes{grid-template-columns:1fr}.decision-matrix{width:calc(100vw - 28px)}}
+@media print{.diagram-container{overflow-x:visible}.result-matrix-svg{min-width:0}}
+</style>
+</head>
+<body>
+<main>
+<article>
+<h1>Why Pass/Fail Is Not Enough for AI Evaluation</h1>
+<p>A single pass rate looks decisive. But it can hide three very different events: the AI behaved incorrectly, the evaluation itself broke, or the available evidence could not support a decision. Treating all three as “fail” produces a clean number and a bad decision.</p>
+<p>The practical fix is to separate the system's behavior from the evaluator's ability to judge it.</p>
+<h2>Four outcomes answer two questions</h2>
+<p>An evaluation first asks whether the run is trustworthy enough to produce a verdict. If it is, the evaluation asks whether the system met the criterion.</p>
+<p>That yields four useful outcomes:</p>
+<ul class="outcomes">
+<li><strong>Pass:</strong> a valid evaluation found that the system met the criterion.</li>
+<li><strong>Fail:</strong> a valid evaluation found that the system did not meet the criterion.</li>
+<li><strong>Invalid:</strong> the evaluation cannot support a verdict because its own prerequisites, execution, or evidence integrity failed.</li>
+<li><strong>Indeterminate:</strong> the evaluation was valid, but the allowed evidence did not establish whether the criterion was met.</li>
+</ul>
+<p>The matrix below makes the separation explicit: validity determines whether any verdict can be trusted; evidence determines whether a valid evaluation can decide between pass and fail.</p>
+<figure class="decision-matrix">
+<div class="diagram-container">
+<svg class="result-matrix-svg" viewBox="0 0 960 600" role="img" aria-labelledby="result-matrix-title result-matrix-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="result-matrix-title">Evaluation result decision matrix</title>
+<desc id="result-matrix-desc">A two-by-two matrix showing that invalid evaluations cannot support a verdict, valid but undecidable evaluations are indeterminate, and valid decidable evaluations produce pass or fail.</desc>
+<defs>
+<pattern id="result-matrix-dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#2d3142" opacity="0.10"/></pattern>
+<marker id="result-matrix-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 Z" fill="#2d3142"/></marker>
+</defs>
+<rect width="960" height="600" fill="#f5f5f5"/>
+<rect width="960" height="540" fill="url(#result-matrix-dots)" opacity="0.28"/>
+
+<line x1="48" y1="278" x2="912" y2="278" stroke="#2d3142" stroke-width="1.2" marker-start="url(#result-matrix-arrow)" marker-end="url(#result-matrix-arrow)"/>
+<line x1="480" y1="40" x2="480" y2="500" stroke="#2d3142" stroke-width="1.2" marker-start="url(#result-matrix-arrow)" marker-end="url(#result-matrix-arrow)"/>
+<text class="matrix-axis" x="36" y="278" text-anchor="end" dominant-baseline="middle">INVALID</text>
+<text class="matrix-axis" x="924" y="278" text-anchor="start" dominant-baseline="middle">VALID</text>
+<text class="matrix-axis" x="480" y="24" text-anchor="middle">DECIDABLE</text>
+<text class="matrix-axis" x="480" y="524" text-anchor="middle">UNDECIDABLE</text>
+
+<rect x="80" y="72" width="340" height="176" rx="6" fill="#2d3142" fill-opacity="0.04" stroke="#4f5d75" stroke-opacity="0.28"/>
+<text class="matrix-tag" x="100" y="100">01 · INVALID / DECIDABLE</text>
+<text class="matrix-title" x="100" y="140">Invalid</text>
+<text class="matrix-copy" x="100" y="168"><tspan x="100" dy="0">An apparent verdict exists,</tspan><tspan x="100" dy="18">but it cannot be trusted.</tspan></text>
+
+<rect x="540" y="72" width="340" height="176" rx="6" fill="#2d3142" fill-opacity="0.04" stroke="#4f5d75" stroke-opacity="0.28"/>
+<text class="matrix-tag" x="560" y="100">02 · VALID / DECIDABLE</text>
+<text class="matrix-title" x="560" y="140">Pass or Fail</text>
+<text class="matrix-copy" x="560" y="168"><tspan x="560" dy="0">The criterion determines</tspan><tspan x="560" dy="18">the trustworthy verdict.</tspan></text>
+
+<rect x="80" y="308" width="340" height="176" rx="6" fill="#2d3142" fill-opacity="0.04" stroke="#4f5d75" stroke-opacity="0.28"/>
+<text class="matrix-tag" x="100" y="336">03 · INVALID / UNDECIDABLE</text>
+<text class="matrix-title" x="100" y="376">Invalid</text>
+<text class="matrix-copy" x="100" y="404"><tspan x="100" dy="0">Repair or rerun the evaluation</tspan><tspan x="100" dy="18">before judging the system.</tspan></text>
+
+<rect x="540" y="308" width="340" height="176" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+<text class="matrix-tag" x="560" y="336" fill="#eb6c36" font-weight="600">04 · VALID / UNDECIDABLE</text>
+<text class="matrix-title" x="560" y="376">Indeterminate</text>
+<text class="matrix-copy" x="560" y="404"><tspan x="560" dy="0">The evaluation is sound,</tspan><tspan x="560" dy="18">but the evidence cannot decide.</tspan></text>
+
+<line x1="40" y1="552" x2="920" y2="552" stroke="#2d3142" stroke-opacity="0.12"/>
+<rect x="260" y="572" width="12" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36"/>
+<text class="matrix-legend" x="284" y="582">EVIDENCE LIMIT</text>
+<rect x="540" y="572" width="12" height="12" rx="2" fill="#2d3142" fill-opacity="0.04" stroke="#4f5d75" stroke-opacity="0.28"/>
+<text class="matrix-legend" x="564" y="582">OTHER RESULT PATHS</text>
+</svg>
+</div>
+</figure>
+<p>The names are less important than the separation. A model failure, a broken test, and an undecidable question should not become the same data point.</p>
+<h2>Invalid is about the evaluation</h2>
+<p>Suppose an AI system must summarize an incident from an approved evidence bundle. During one run, the evaluation harness's input-assembly step omits a required record because its fixture is corrupted. The summary misses the record's fact.</p>
+<p>Calling that run a failure blames the AI for evidence it never received. Calling it a pass is worse. The run is <strong>invalid</strong> because the evaluation did not satisfy its own prerequisites. The right response is to repair or rerun the evaluation path, not to update the model's quality score.</p>
+<p>Invalid does not mean “the answer was bad.” It means the evaluation cannot responsibly say whether the answer was good or bad.</p>
+<h2>Indeterminate is about the available evidence</h2>
+<p>Now suppose the evidence bundle is complete and the evaluation runs correctly, but two authorized records conflict. Neither source has priority, and no additional evidence is allowed.</p>
+<p>The result is <strong>indeterminate</strong>. The evaluator is healthy; the question is not answerable from the evidence. Forcing a pass or fail would manufacture certainty.</p>
+<p>This distinction is especially important when AI systems are expected to preserve uncertainty. If an evaluation punishes an answer for refusing to resolve unsupported ambiguity, it can train teams—and eventually models—to sound certain when the evidence is not.</p>
+<h2>Established testing vocabularies already go beyond binary</h2>
+<p>The exact four terms above are a practical vocabulary, not a universal industry standard. But the underlying principle has strong precedent.</p>
+<p>ETSI's standardized TTCN-3 testing language uses verdicts including <code>pass</code>, <code>fail</code>, and <code>inconc</code> for an inconclusive result. Its documentation explains that <code>inconc</code> can apply when the system under test does nothing illegal but the test encounters a situation it was not designed to handle. That is materially different from failure. See the <a href="https://ttcn-3.etsi.org/index.php/downloads/standards">ETSI TTCN-3 standards</a> and its <a href="https://tdl.etsi.org/files/GeneralPurposeTTCN3SA.pdf">general-purpose test-system documentation</a>.</p>
+<p>The W3C's Evaluation and Report Language (EARL) 1.0 Schema likewise defines <code>passed</code>, <code>failed</code>, <code>cantTell</code>, <code>inapplicable</code>, and <code>untested</code>. <code>cantTell</code> records that it is unclear whether the subject passed or failed. EARL is a W3C Working Group Note, not a Recommendation, but it is another reputable example of preserving more meaning than a Boolean. See the <a href="https://www.w3.org/TR/EARL10-Schema/">W3C EARL 1.0 Schema</a>.</p>
+<p>Neither source standardizes this exact four-state model. They support the narrower conclusion that serious test-result vocabularies often need outcomes beyond pass and fail.</p>
+<h2>Why the distinction changes decisions</h2>
+<p>Separating outcomes keeps the response aligned with the problem:</p>
+<ul>
+<li>A <strong>fail</strong> directs attention to the evaluated system.</li>
+<li>An <strong>invalid</strong> run directs attention to the evaluation machinery or inputs.</li>
+<li>An <strong>indeterminate</strong> result directs attention to evidence limits, criteria, or a qualified judgment step.</li>
+<li>A <strong>pass</strong> remains meaningful because unusable runs were not silently folded into the denominator.</li>
+</ul>
+<p>This also makes evaluation reports harder to game. Keeping invalid runs visible prevents a system from benefiting when broken evaluations are excluded, and it avoids penalizing honest uncertainty that the evidence cannot resolve.</p>
+<p>Pass/fail is still useful after validity and decidability are established. It is simply not sufficient as the entire result model.</p>
+<p class="rule">The durable rule is straightforward: <strong>do not call the system wrong when the test was unusable, and do not claim certainty when valid evidence could not decide.</strong></p>
+<h2>References</h2>
+<ul>
+<li><a href="https://ttcn-3.etsi.org/index.php/downloads/standards">ETSI: TTCN-3 Standards</a></li>
+<li><a href="https://tdl.etsi.org/files/GeneralPurposeTTCN3SA.pdf">ETSI: General Purpose TTCN-3 Test System</a></li>
+<li><a href="https://www.w3.org/TR/EARL10-Schema/">W3C: Evaluation and Report Language (EARL) 1.0 Schema</a></li>
+</ul>
+</article>
+</main>
+</body>
+</html>
