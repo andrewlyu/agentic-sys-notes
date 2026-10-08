@@ -6,8 +6,8 @@
 <meta name="blog:repository" content="andrewlyu/agentic-sys-notes">
 <meta name="blog:branch" content="main">
 <meta name="blog:article-path" content="notes/why-pass-fail-is-not-enough-for-ai-evaluation/index.html">
-<meta name="blog:markdown-sha256" content="5020fc576a74550dc87a063b67c50247ac7a540c4e399191b68790eedf5c18b9">
-<meta name="blog:publication-id" content="pass-fail-not-enough-20261007-v3">
+<meta name="blog:markdown-sha256" content="de13bf27a3306f5c915e7952ba515b8195d148a75666a22171dee6dbd2410cd5">
+<meta name="blog:publication-id" content="pass-fail-not-enough-20261008-v4">
 <link rel="canonical" href="https://andrewlyu.github.io/agentic-sys-notes/notes/why-pass-fail-is-not-enough-for-ai-evaluation/">
 <title>Why Pass/Fail Is Not Enough for AI Evaluation</title>
 <style>
@@ -51,6 +51,7 @@ article>h2:last-of-type+ul{color:var(--muted);font-size:14px;line-height:1.5}
 <h1>Why Pass/Fail Is Not Enough for AI Evaluation</h1>
 <p>A single pass rate looks decisive. But it can hide three very different events: the AI behaved incorrectly, the evaluation itself broke, or the available evidence could not support a decision. Treating all three as “fail” produces a clean number and a bad decision.</p>
 <p>The practical fix is to separate the system's behavior from the evaluator's ability to judge it.</p>
+<p>This distinction is not unique to this proposal. In formal neural-network robustness verification, MathWorks distinguishes among <code>verified</code>, <code>violated</code>, and <code>unproven</code> results. Its vocabulary is narrower than the four outcomes proposed here, but it supports the underlying principle: an evaluation that cannot establish a conclusion should not automatically be recorded as a failure.</p>
 <h2>Four outcomes answer two questions</h2>
 <p>An evaluation first asks whether the run is trustworthy enough to produce a verdict. If it is, the evaluation asks whether the system met the criterion.</p>
 <p>That yields four useful outcomes:</p>
@@ -135,6 +136,7 @@ article>h2:last-of-type+ul{color:var(--muted);font-size:14px;line-height:1.5}
 <p class="rule">The durable rule is straightforward: <strong>do not call the system wrong when the test was unusable, and do not claim certainty when valid evidence could not decide.</strong></p>
 <h2>References</h2>
 <ul>
+<li><a href="https://blogs.mathworks.com/deep-learning/2024/02/07/verification-and-validation-for-ai-learning-process-verification/">MathWorks: Verification and Validation for AI — Learning Process Verification</a></li>
 <li><a href="https://ttcn-3.etsi.org/index.php/downloads/standards">ETSI: TTCN-3 Standards</a></li>
 <li><a href="https://tdl.etsi.org/files/GeneralPurposeTTCN3SA.pdf">ETSI: General Purpose TTCN-3 Test System</a></li>
 <li><a href="https://www.w3.org/TR/EARL10-Schema/">W3C: Evaluation and Report Language (EARL) 1.0 Schema</a></li>
