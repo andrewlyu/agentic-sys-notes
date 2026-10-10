@@ -10,3 +10,4 @@ Public architecture notes on building, reviewing, and operating agentic systems.
 - [When Does AI Add Value Beyond a Deterministic Baseline?](notes/ai-value-beyond-deterministic-baseline/index.html)
 - [Interoperable Evidence Semantics for Distributed Cyber-Physical Systems](notes/interoperable-evidence-semantics-cyber-physical-systems/index.html)
 - [Why Pass/Fail Is Not Enough for AI Evaluation](notes/why-pass-fail-is-not-enough-for-ai-evaluation/index.html)
+- [How Does Solution Contamination Undermine AI Benchmarks?](notes/solution-contamination-ai-benchmarks/index.html)
