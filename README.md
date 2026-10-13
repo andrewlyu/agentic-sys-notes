@@ -11,3 +11,4 @@ Public architecture notes on building, reviewing, and operating agentic systems.
 - [Interoperable Evidence Semantics for Distributed Cyber-Physical Systems](notes/interoperable-evidence-semantics-cyber-physical-systems/index.html)
 - [Why Pass/Fail Is Not Enough for AI Evaluation](notes/why-pass-fail-is-not-enough-for-ai-evaluation/index.html)
 - [How Does Solution Contamination Undermine AI Benchmarks?](notes/solution-contamination-ai-benchmarks/index.html)
+- [Bad Agent Output or Broken Validator? Debugging an Agentic Workflow with Langfuse](notes/debugging-agent-validation-with-langfuse/index.html)
