@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storage efficiency begins with data representation</title><link rel="canonical" href="https://andrewlyu.github.io/agentic-sys-notes/notes/storage-efficiency-data-representation/">
+<meta name="blog:repository" content="andrewlyu/agentic-sys-notes">
+<meta name="blog:branch" content="main">
+<meta name="blog:article-path" content="notes/storage-efficiency-data-representation/index.html">
+<meta name="blog:markdown-sha256" content="582572ee81be83e0bc65e3cccc18f3643806c65e2d95447d0589f9aa705e4bea">
+<meta name="blog:publication-id" content="storage-representation-20261014-v1">
+<style>
+:root{--paper:#f5f5f5;--paper-2:#ececec;--ink:#2d3142;--muted:#4f5d75;--accent:#eb6c36;--rule:rgba(45,49,66,.16);--link:#2e5aa8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Geist",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:896px;margin:0 auto;padding:56px 48px 80px}
+.edition{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding-bottom:20px;border-bottom:1px solid var(--rule);margin-bottom:32px}
+h1{font-family:"Instrument Serif",Georgia,serif;font-size:clamp(38px,5.8vw,64px);line-height:1.07;font-weight:400;letter-spacing:-.025em;margin:0 0 36px;border-top:4px solid var(--accent);padding-top:24px;text-wrap:balance}
+article{font-size:18px;line-height:1.75}
+p{margin:0 0 24px}
+a{color:var(--link);text-decoration-thickness:1px;text-underline-offset:3px;overflow-wrap:anywhere}
+a:hover{text-decoration-thickness:2px}
+a:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+strong{font-weight:650}
+.comparison{list-style:none;padding:0;margin:28px 0 30px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.comparison li{font-size:clamp(24px,3vw,32px);font-variant-numeric:tabular-nums;line-height:1.4;padding:24px;border:1px solid var(--rule);border-radius:6px;background:#fff}
+.comparison li strong{display:block;font-size:15px;font-weight:600;color:var(--muted);margin-bottom:12px}
+.comparison li:last-child{border-top:4px solid var(--accent);padding-top:21px}
+h2{font-family:"Instrument Serif",Georgia,serif;font-size:30px;font-weight:400;line-height:1.2;border-top:1px solid var(--rule);padding-top:28px;margin:38px 0 20px}
+article>ul:not(.comparison){padding-left:22px;font-size:16px;line-height:1.65}
+article>ul:not(.comparison) li{margin-bottom:12px}
+footer{font-size:12px;color:var(--muted);margin-top:40px;border-top:1px solid var(--rule);padding-top:20px}
+@media(max-width:600px){main{padding:28px 22px 48px}.edition{font-size:10px;letter-spacing:.08em}article{font-size:17px;line-height:1.7}h1{margin-bottom:28px}.comparison{grid-template-columns:1fr}.comparison li{padding:20px}.comparison li:last-child{padding-top:17px}}
+@media print{body{background:#fff}main{max-width:none;padding:0}.edition,footer{color:#333}a{color:inherit}.comparison{break-inside:avoid}h1{font-size:38px}article{font-size:11pt;line-height:1.5}}
+</style></head><body>
+<main><header class="edition">Andrew Lyu · Engineering notes · 14 October 2026</header>
+<article><h1>Storage efficiency begins with data representation</h1>
+<p>Columnar storage is an established approach in analytical systems. Apache Parquet was designed to support efficient encoding and compression at the column level. AWS's Athena guidance likewise explains how column-specific compression can reduce storage space and query IO. Data layout and encoding therefore belong in the storage design alongside the compression codec. <a href="https://parquet.apache.org/docs/overview/motivation/">Apache Parquet design rationale</a>, <a href="https://docs.aws.amazon.com/athena/latest/ug/columnar-storage.html">AWS columnar-storage guidance</a>.</p>
+<p>I applied these principles to a telemetry archive, focusing on preserving the meaning of each record while reducing repeated representation.</p>
+<p>I separated stable metadata from changing measurements. Values, sequence numbers, timestamps, and quality codes remain together in the columnar data. Quality labels use integer codes with an explicit mapping in shared metadata, so the reader can reconstruct the original status.</p>
+<p>I also kept the logical data and metadata interfaces independent of their physical storage formats. Parquet is now the default, while JSONL remains available for experiments and compatibility.</p>
+<p>A second part of the work was defining what belongs in an archive. Receiver state, verification indexes, and experiment reports serve different lifecycles. I made reader verification indexes optional and allowed ordinary datasets to omit delivery journals. Workflows that verify delivery behavior still require the relevant evidence.</p>
+<p>For a supporting experiment, I generated <strong>1,000 telemetry samples and 1,000 delivery attempts</strong>:</p>
+<ul class="comparison">
+<li><strong>JSONL:</strong> 521,501 bytes.</li>
+<li><strong>Parquet:</strong> 93,680 bytes.</li>
+</ul>
+<p>The Parquet archive occupied <strong>approximately 82% less space</strong>. Reconstructed logical records and metadata matched, and accepted delivery effects were checked using temporary evidence before that evidence was removed.</p>
+<p>Both archive measurements exclude optional delivery journals, working indexes, and experiment reports. The reduction reflects the combined effects of data representation, encoding, compression, and format overhead.</p>
+<p>This is a useful result for one small synthetic fixture. It gives me evidence for the implementation, while larger-scale resource use and shutdown behavior remain unvalidated.</p>
+<p>Before attempting a larger run, I will first demonstrate sufficient observability on small fixtures: progress tracking, resource accounting, original error capture, stalled-progress detection, and controlled cancellation. That will provide a stronger basis for planning an expensive full-profile validation.</p>
+<h2>References</h2>
+<ul>
+<li><a href="https://parquet.apache.org/docs/overview/motivation/">Apache Parquet: Motivation</a></li>
+<li><a href="https://docs.aws.amazon.com/athena/latest/ug/columnar-storage.html">AWS Athena: Use columnar storage formats</a></li>
+</ul>
+</article>
+<footer>Storage representation · Supporting evidence from a small synthetic fixture</footer>
+</main></body></html>

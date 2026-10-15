@@ -12,3 +12,5 @@ Public architecture notes on building, reviewing, and operating agentic systems.
 - [Why Pass/Fail Is Not Enough for AI Evaluation](notes/why-pass-fail-is-not-enough-for-ai-evaluation/index.html)
 - [How Does Solution Contamination Undermine AI Benchmarks?](notes/solution-contamination-ai-benchmarks/index.html)
 - [Bad Agent Output or Broken Validator? Debugging an Agentic Workflow with Langfuse](notes/debugging-agent-validation-with-langfuse/index.html)
+
+- [Storage efficiency begins with data representation](notes/storage-efficiency-data-representation/index.html)
