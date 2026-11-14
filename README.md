@@ -14,3 +14,4 @@ Public architecture notes on building, reviewing, and operating agentic systems.
 - [Bad Agent Output or Broken Validator? Debugging an Agentic Workflow with Langfuse](notes/debugging-agent-validation-with-langfuse/index.html)
 
 - [Storage efficiency begins with data representation](notes/storage-efficiency-data-representation/index.html)
+- [Exploring a Robot’s Binary Map in Simulation](notes/binary-robot-maps-observed-evidence/index.html)
