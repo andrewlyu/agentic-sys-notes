@@ -15,3 +15,4 @@ Public architecture notes on building, reviewing, and operating agentic systems.
 
 - [Storage efficiency begins with data representation](notes/storage-efficiency-data-representation/index.html)
 - [Exploring a Robot’s Binary Map in Simulation](notes/binary-robot-maps-observed-evidence/index.html)
+- [When Sensor Updates Stop: Replaying a Robot-Map Outage](notes/robot-map-outage-replay/index.html)
